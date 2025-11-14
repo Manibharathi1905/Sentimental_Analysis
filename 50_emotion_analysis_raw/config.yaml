@@ -1,0 +1,14 @@
+train_csv: "data/processed/goemotions_empathetic_train.csv"
+val_csv: "data/processed/goemotions_empathetic_val.csv"
+label_map: "data/label_map.json"
+model_name: "roberta-base"
+max_length: 192
+batch_size: 8
+lr: 0.00003
+epochs: 5
+output_dir: "models"
+text_col: "text"
+label_col: "labels"
+threshold: 0.3
+seed: 42
+weight_decay: 0.01

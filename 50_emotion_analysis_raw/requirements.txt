@@ -1,0 +1,21 @@
+﻿torch==2.4.1+cu121
+torchvision==0.19.1+cu121
+torchaudio==2.4.1+cu121
+--index-url https://download.pytorch.org/whl/cu121
+--trusted-host download.pytorch.org
+
+streamlit==1.51.0
+--trusted-host pypi.org
+--trusted-host files.pythonhosted.org
+
+numpy
+opencv-python
+Pillow
+tqdm
+transformers
+datasets
+scikit-learn
+pyyaml
+flask
+sentencepiece
+accelerate
