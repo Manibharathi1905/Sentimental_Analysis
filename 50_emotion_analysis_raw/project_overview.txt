@@ -1,0 +1,46 @@
+### Project Overview: 50-Emotion Analysis System
+
+This project implements a multi-label emotion classification system capable of detecting up to 50 distinct emotions from text input. It leverages PyTorch, the Transformers library (specifically DistilBERT), and is designed for applications like mental health support, sentiment analysis, and empathetic chatbots. The system processes text to output probabilities for each emotion, allowing for nuanced detection of complex emotional states (e.g., a single sentence might express both "joy" and "gratitude"). The full list of 50 emotions includes positive ones like "joy" (index 0), "happiness" (1), "love" (2), "affection" (3), "gratitude" (4), "hope" (5), "relief" (6), "pride" (7), "amusement" (8), "interest" (9), "excitement" (10), "satisfaction" (11), "contentment" (12), "peace" (13), "trust" (14), "compassion" (15), "optimism" (16), "confidence" (17), "kindness" (18), "calmness" (19), and negative ones like "sadness" (20), "anger" (21), "fear" (22), "disgust" (23), "guilt" (24), "shame" (25), "loneliness" (26), "frustration" (27), "despair" (28), "hopelessness" (29), "envy" (30), "jealousy" (31), "anxiety" (32), "regret" (33), "resentment" (34), "bitterness" (35), "grief" (36), "embarrassment" (37), "helplessness" (38), "boredom" (39), "surprise" (40), "curiosity" (41), "confusion" (42), "nostalgia" (43), "anticipation" (44), "indifference" (45), "reflection" (46), "acceptance" (47), "awe" (48), "uncertainty" (49).
+
+#### How It Works: Step-by-Step Breakdown
+
+1. **Data Preparation**:
+   - The system uses preprocessed CSV datasets from GoEmotions (a dataset of Reddit comments labeled with 27 emotions, expanded to 50 here via additional annotations) and EmpatheticDialogues (conversations focused on empathy with emotion labels), containing text and multi-label emotion annotations. For example, a CSV row might have text: "I'm so happy to see you!" and labels: ["joy", "gratitude"].
+   - Emotions are mapped to a 50-class label space via `data/label_map.json`, which includes positive emotions (e.g., "joy", "love", "gratitude") and negative ones (e.g., "sadness", "anger", "anxiety"). Each text sample is encoded into multi-hot vectors for training, where a vector of length 50 has 1s for present emotions and 0s otherwise.
+   - Tokenization is handled by DistilBERT's tokenizer, with sequences padded/truncated to a max length (default 256 tokens). This ensures uniform input sizes for batch processing.
+
+2. **Model Architecture**:
+   - The core model (`model.py`) is an `EmotionClassifier` built on DistilBERT as the backbone for contextual embeddings. DistilBERT is a distilled version of BERT, offering 97% of BERT's performance with 40% fewer parameters, making it efficient for this task.
+   - It includes a pooler layer (linear transformation from 768 to 256 dimensions + ReLU activation + dropout with rate 0.2) to reduce dimensionality, followed by a classifier head (linear layer from 256 to 50 outputs) producing logits for each emotion.
+   - Forward pass: Input text → DistilBERT (produces hidden states) → Pooling (takes the [CLS] token's embedding) → Pooler layer → Classifier → Logits. During inference, sigmoid activation is applied to logits to get probabilities between 0 and 1 for each emotion.
+   - Supports multi-label classification using binary cross-entropy loss with class-weighted sampling to handle imbalanced emotions (e.g., common emotions like "joy" vs. rare ones like "awe"). The loss weights are computed as (total samples) / (class count + epsilon) to upweight minority classes.
+
+3. **Training Process**:
+   - `train.py` orchestrates training with AdamW optimizer (learning rate default 2e-5, weight decay 0.01), linear warmup scheduling (5% of steps for warmup), and early stopping based on macro-F1 score on validation data.
+   - Loss is weighted by inverse class frequency to prioritize rare emotions, preventing the model from ignoring underrepresented labels.
+   - Training loops over epochs (configurable, e.g., 10), computes validation metrics (macro-F1: average F1 across classes; micro-F1: global F1), and saves the best model checkpoint (e.g., `best_model.pt`) when macro-F1 improves.
+   - Hyperparameters (e.g., learning rate, batch size=16, epochs, threshold=0.5) are configurable via YAML config files. Training uses DataLoader for batching, with progress bars via tqdm, and supports GPU acceleration if available.
+
+4. **Evaluation and Inference**:
+   - `evaluate.py` provides thresholding logic for converting probabilities to binary predictions, optimizing for F1 scores. It uses a fixed threshold (default 0.5) per class, but can be tuned per-class for better performance.
+   - `inference.py` defines `EmotionPredictor` for loading a trained model and making predictions on new text. It handles robust checkpoint loading (supports state_dict, full model objects, or wrapped checkpoints), tokenization, and outputs detected emotions with scores above a threshold (default 0.4). For example, input "I'm excited but nervous" might output emotions: ["excitement", "anxiety"] with scores {"excitement": 0.85, "anxiety": 0.62}.
+   - Predictions return a list of emotions (filtered by threshold) and a dictionary of all emotion probabilities. The class includes error handling for loading issues and device selection (CPU/GPU).
+
+5. **Interactive Application**:
+   - `streamlit_app.py` provides a dark-themed web UI ("Emotion-Bot") for real-time emotion detection, built with Streamlit for easy deployment.
+   - Users input text via a text area, and the app predicts emotions, displays them as styled chips with scores (e.g., "joy: 0.92"), and generates empathetic templated replies based on detected emotions (e.g., sadness triggers "I'm really sorry you're going through this. If you want, tell me more — I'm here to listen."). Templates are hardcoded for categories like grief/sadness, anxiety/fear, anger, and positive emotions.
+   - Includes session memory for conversation history (stored in a dict), quick actions (clear conversation, download chat as JSON), and model info (file path, device, threshold). The UI uses custom CSS for a professional dark theme with green accents, and caches the predictor for performance.
+
+6. **Utilities and Data Handling**:
+   - `data_utils.py`: `EmotionDataset` class for loading CSVs (using pandas), tokenizing with DistilBERT, and converting labels to multi-hot vectors. It handles JSON-parsed labels or comma-separated strings, ensuring robust label mapping.
+   - `utils.py`: Seed setting for reproducibility (sets random, numpy, torch seeds), JSON I/O for configs and labels.
+   - The system assumes preprocessed data in `data/processed/` (e.g., empathetic_train.csv, goemotions_train.csv) and saves models in `models/`. Additional scripts like `download_and_prepare.py` handle dataset fetching and preprocessing.
+
+#### Key Features and Workflow
+- **Multi-Label Focus**: Unlike binary sentiment (positive/negative), it detects multiple emotions per text (e.g., "I'm happy but worried" → joy + anxiety), using sigmoid for independent probabilities.
+- **Scalability**: Uses DistilBERT for efficiency (faster inference than full BERT); can be swapped for larger models like RoBERTa by changing the model_name parameter.
+- **Deployment**: Trained models are saved as PyTorch state dicts; inference is GPU-accelerated if available, with automatic device detection.
+- **End-to-End Pipeline**: From raw text → tokenized inputs (via AutoTokenizer) → model predictions (logits → sigmoid probabilities) → human-readable outputs (emotion lists and scores).
+- **Limitations**: Requires labeled data for training (e.g., GoEmotions dataset); performance depends on dataset quality, threshold tuning (e.g., lower for sensitivity), and may not generalize to unseen domains. Not suitable for clinical use without validation.
+
+This setup enables empathetic AI tools, such as chatbots that respond based on emotional context, while emphasizing it's for research/demo and not medical use. For example, in mental health apps, it could flag high anxiety scores for human intervention.
