@@ -1,0 +1,14 @@
+torch>=2.0.0
+transformers>=4.30.0
+sentence-transformers>=2.2.2
+datasets>=2.12.0
+scikit-learn>=1.2.2
+pandas>=1.5.3
+tqdm
+numpy
+streamlit
+matplotlib
+scipy
+streamlit-echarts
+lottie
+streamlit-lottie
