@@ -1,0 +1,55 @@
+Project Overview: Mental Health Emotion Analyzer
+
+This project is a mental health emotion detection system using a hybrid deep learning model (RoBERTa + GTE embeddings) for multi-label emotion classification. It analyzes text input to detect emotions like joy, sadness, anger, etc., and provides a Streamlit web app for user interaction.
+
+Datasets Used:
+- EmpatheticDialogues: A dataset of empathetic conversations, split into train, validation, and test sets. It focuses on emotional dialogues.
+- GoEmotions: A dataset with 21 emotion labels, used for broader emotion coverage.
+- Emotion.csv: Additional emotion-labeled text data.
+- EmotionsDataset.csv: Another supplementary dataset for emotion classification.
+
+Data Processing Workflow:
+1. Download and merge raw datasets using download_empathetic.py and scripts/merge_extra_data.py.
+2. Clean and preprocess data with src/preprocess.py, mapping emotions to 11 core labels (joy, sadness, neutral, anger, love, fear, disgust, confusion, surprise, shame, guilt).
+3. Balance the dataset to 8000 samples per emotion using scripts/balance_11_to_8000.py.
+4. Split into train/val/test sets with scripts/split_balanced_11.py and scripts/stratified_split.py.
+5. Precompute GTE embeddings for efficiency using scripts/precompute_gte.py, saved as .npy files in data/processed/.
+
+Model Architecture:
+- HybridEmotionModel (src/hybrid_model.py): Combines RoBERTa (for contextual text encoding) and GTE (General Text Embeddings) for semantic understanding.
+- Multi-label classification head for 11 emotions.
+- Configuration in src/config.py (device, labels, hyperparameters).
+
+Training Process:
+1. Load processed data using src/dataset.py (custom dataset class with tokenization).
+2. Train the model with src/train.py, using Adam optimizer, BCE loss for multi-label.
+3. Save checkpoints in outputs/checkpoints/ (best_model.pt used for inference).
+4. Monitor training with src/evaluate.py for validation metrics.
+
+Threshold Tuning:
+- After training, tune decision thresholds for each emotion using scripts/tune_thresholds.py and scripts/adjust_thresholds.py.
+- Thresholds saved in outputs/thresholds.npy for optimal F1-score in multi-label prediction.
+
+Evaluation:
+- Evaluate on test set with scripts/apply_thresholds_eval.py.
+- Metrics: Precision, Recall, F1 for each emotion.
+
+Streamlit App (app_streamlit.py):
+- User inputs text in a text area.
+- Model predicts top 5 emotions with probabilities.
+- Displays strong emotions detected (above threshold).
+- Dark glassmorphism UI with custom CSS.
+
+How It Works:
+1. User types a message in the app.
+2. Text is tokenized and encoded with RoBERTa and GTE.
+3. Model outputs probabilities for 11 emotions.
+4. Apply thresholds to get binary predictions.
+5. Show results: Top emotions with scores, and detected strong emotions.
+
+Dependencies: Listed in requirements.txt (torch, transformers, streamlit, sentence-transformers, etc.).
+
+To Run:
+- Train: python src/train.py
+- Tune thresholds: python scripts/tune_thresholds.py
+- App: streamlit run app_streamlit.py
