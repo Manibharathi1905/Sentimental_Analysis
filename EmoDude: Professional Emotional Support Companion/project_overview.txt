@@ -1,0 +1,75 @@
+# EmoDude Project Overview
+
+## Project Description
+EmoDude is a professional AI-powered emotional support companion built using Streamlit. It provides empathetic listening, emotional analysis, therapeutic solutions, motivational stories, and crisis resources. The app integrates advanced deep learning models for emotion detection, response generation, and multimodal support (text, images, audio, video). It aims to offer compassionate, history-aware dialogue and personalized support for mental health.
+
+## How Emotion Analysis Works
+Emotion analysis in EmoDude is a multi-layered, hybrid approach combining deep learning models, keyword-based heuristics, and contextual boosts for accurate and nuanced emotion detection. The system is designed to handle text inputs (and optionally images) to classify emotions, assess risk levels, and provide tailored responses.
+
+### Key Components:
+1. **Deep Learning Models**:
+   - **Primary Model**: SamLowe/roberta-base-go_emotions (RoBERTa-based transformer model fine-tuned for emotion classification).
+   - **Secondary Model**: j-hartmann/emotion-english-distilroberta-base (DistilRoBERTa model for complementary emotion detection).
+   - These models process input text to output probability scores for a wide range of emotions (e.g., joy, sadness, anger, fear, etc.).
+
+2. **Multimodal Support**:
+   - Uses OpenAI's CLIP (Contrastive Language-Image Pretraining) model for emotion detection from images. CLIP compares image features with emotion-related text prompts (e.g., "A person feeling happy") to assign scores.
+
+3. **Keyword and Heuristic Fallback**:
+   - If models fail to load or are unavailable, the system falls back to a rule-based heuristic using predefined keyword clusters (e.g., words like "lonely" for sadness, "angry" for anger).
+   - Keywords are expanded using WordNet (for synonyms and hypernyms) and semantic similarity via Sentence Transformers (all-MiniLM-L6-v2) to include related terms.
+
+4. **Contextual Boosts**:
+   - Analyzes text for keyword matches and applies boosts to emotion scores based on word length and frequency, ensuring nuanced detection (e.g., stronger boosts for longer, more specific terms).
+
+5. **Emotion Scoring and Risk Assessment**:
+   - Merges scores from multiple models (weighted: 60% primary, 40% secondary) and applies boosts.
+   - Normalizes scores and filters out low-confidence emotions (threshold > 0.1).
+   - Calculates a risk score based on negative emotions (e.g., grief, sadness, fear) to flag potential crises. Positive emotions reduce risk.
+
+6. **Additional Features**:
+   - **Trend Detection**: Analyzes emotion history to identify trends (e.g., improving, declining, stable).
+   - **Export Functionality**: Allows exporting emotion data as JSON for backup.
+   - **Low Emotion Monitoring**: Checks if monitored emotions (e.g., sadness, grief) exceed thresholds for interventions.
+
+### Workflow:
+- Input text (and optional image) is tokenized and fed into the models.
+- Scores are computed, boosted by keywords, and merged.
+- Risk is assessed, and results are logged.
+- Outputs include emotion probabilities, primary emotion, and risk level (0-1).
+
+This hybrid approach ensures robustness, even on resource-constrained devices, while providing deep, empathetic insights.
+
+## Datasets Used
+The emotion analysis relies on pre-trained models trained on publicly available datasets:
+
+1. **GoEmotions Dataset** (for SamLowe/roberta-base-go_emotions):
+   - A large-scale dataset for fine-grained emotion recognition in text, containing over 58,000 Reddit comments annotated with 27 emotion categories (e.g., admiration, anger, joy) and neutral.
+   - Includes multi-label annotations, allowing for complex emotional expressions.
+   - Source: Derived from Reddit data, publicly available on Hugging Face.
+
+2. **Emotion Dataset** (for j-hartmann/emotion-english-distilroberta-base):
+   - Likely based on the "Emotion" dataset or similar corpora, which includes text samples labeled with basic emotions (e.g., anger, disgust, fear, joy, sadness, surprise).
+   - Trained on English text for emotion classification, providing complementary scores to the primary model.
+
+3. **CLIP Training Data** (for OpenAI CLIP):
+   - Trained on a massive dataset of 400 million image-text pairs from the web, enabling zero-shot emotion detection from images by associating visual features with emotion-related text.
+
+4. **Additional Resources**:
+   - **WordNet**: Used for keyword expansion (synonyms, hypernyms).
+   - **Sentence Transformers Embeddings**: all-MiniLM-L6-v2 model, trained on general text corpora for semantic similarity.
+
+No custom datasets are trained in this project; it leverages pre-trained models for efficiency and generalization.
+
+## Technologies and Dependencies
+- **Frameworks**: Streamlit (UI), PyTorch/Transformers (models), NLTK (WordNet), Sentence Transformers (embeddings).
+- **Models**: RoBERTa, DistilRoBERTa, CLIP, GPT-2 (for story generation).
+- **Other**: PIL (images), JSON (data export), Logging (monitoring).
+- **Device Support**: CPU/GPU with quantization for efficiency.
+
+## Limitations and Ethical Considerations
+- Not a substitute for professional therapy; includes disclaimers and crisis resources.
+- Models may have biases from training data; risk assessment is heuristic-based.
+- Requires internet for model downloads; fallback to heuristics if offline.
+
+This overview captures the core mechanics of emotion analysis in EmoDude, emphasizing its hybrid, model-driven approach for empathetic AI support.
