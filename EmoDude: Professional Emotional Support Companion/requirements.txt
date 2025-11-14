@@ -1,0 +1,42 @@
+# Core
+streamlit>=1.50.0
+numpy>=1.24.0
+pandas>=2.0.0
+requests>=2.32.0
+python-dotenv>=1.1.1
+
+# Hugging Face Transformers & Torch
+torch>=2.9.0
+sentencepiece>=0.1.99
+datasets>=4.2.0
+
+# NLP / Emotion Detection
+scikit-learn>=1.7.2
+nltk>=3.9.2
+emoji>=2.15.0
+
+# TTS (Text-to-Speech)
+gTTS>=2.5.4
+edge-tts>=7.2.3
+coqui-tts==0.27.2
+
+# YouTube / Video
+pytube==15.0.0
+youtube-search-python==1.6.6
+moviepy>=2.2.1
+
+# Audio Handling
+pydub==0.25.1
+simpleaudio>=1.0.4
+
+
+
+# Logging & Utilities
+loguru>=0.7.0
+rich>=13.5.3
+
+# Transformers Training
+transformers>=4.56.1,<4.58
+trl>=0.23.1
+
+
